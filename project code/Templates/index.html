@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block page_title %}Project Overview{% endblock %}
+{% block content %}
+
+<!-- Hero Banner -->
+<div style="background:linear-gradient(135deg,rgba(229,57,53,.15),rgba(26,115,232,.15));
+            border:1px solid var(--border); border-radius:16px; padding:2.5rem; margin-bottom:2rem;">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <span class="badge bg-danger mb-2">Intermediate Level</span>
+            <h1 style="font-weight:800;font-size:2rem; line-height:1.2;">
+                Heart Disease <span style="color:#58a6ff;">Analysis</span>
+            </h1>
+            <p style="color:var(--muted); max-width:600px; line-height:1.7; margin:.75rem 0 1.25rem;">
+                A comprehensive data analytics project analyzing <strong style="color:var(--text);">{{ stats.total }}
+                    patient records</strong>
+                to uncover patterns in heart disease risk using Python, machine learning, and interactive visualizations
+                —
+                aligned with the SmartBridge Data Analytics with Tableau curriculum.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge"
+                    style="background:rgba(26,115,232,.2);color:#58a6ff;padding:.5rem .9rem;">Python</span>
+                <span class="badge"
+                    style="background:rgba(76,175,80,.2);color:#81c784;padding:.5rem .9rem;">Scikit-learn</span>
+                <span class="badge"
+                    style="background:rgba(255,152,0,.2);color:#ffb74d;padding:.5rem .9rem;">Bootstrap</span>
+                <span class="badge"
+                    style="background:rgba(229,57,53,.2);color:#e57373;padding:.5rem .9rem;">Flask</span>
+                <span class="badge" style="background:rgba(156,39,176,.2);color:#ce93d8;padding:.5rem .9rem;">Data
+                    Preprocessing</span>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center mt-3 mt-lg-0">
+            <div style="font-size:7rem; line-height:1;">🫀</div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Row -->
+<div class="row g-3 mb-4">
+    {% set cards = [
+    ("fa-users","rgba(26,115,232,.2)","#58a6ff", stats.total|string, "Total Patients"),
+    ("fa-heartbeat","rgba(229,57,53,.2)","#e57373", stats.disease|string ~ " (" ~ stats.disease_pct ~ "%)", "With Heart
+    Disease"),
+    ("fa-shield-alt","rgba(76,175,80,.2)","#81c784", stats.no_disease|string, "No Disease"),
+    ("fa-birthday-cake","rgba(255,152,0,.2)","#ffb74d", stats.avg_age|string ~ " yrs", "Avg Patient Age"),
+    ("fa-tint","rgba(156,39,176,.2)","#ce93d8", stats.avg_bp|string ~ " mmHg", "Avg Blood Pressure"),
+    ("fa-fire","rgba(0,188,212,.2)","#4dd0e1", stats.avg_chol|string ~ " mg/dl", "Avg Cholesterol"),
+    ] %}
+    {% for icon, bg, color, val, label in cards %}
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-card h-100">
+            <div class="icon" style="background:{{bg}};color:{{color}};"><i class="fas {{icon}}"></i></div>
+            <h3 style="color:{{color}};font-size:1.25rem;">{{val}}</h3>
+            <p>{{label}}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Project Modules -->
+<div class="card-panel">
+    <div class="card-header"><i class="fas fa-sitemap me-2"></i>Project Modules</div>
+    <div class="p-3">
+        <div class="row g-3">
+            {% set modules = [
+            ("fa-database","Data Collection","Extracts 1 000 patient records from SQLite database with 13 clinical
+            features.","#1a73e8","/"),
+            ("fa-broom","Data Preparation","Handles missing values, outliers, feature engineering, and standard
+            scaling.","#43a047","/"),
+            ("fa-chart-bar","Data Visualization","8 interactive charts: distributions, heatmaps, scatter, and box
+            plots.","#ff9800","/visualizations"),
+            ("fa-tachometer-alt","Performance Testing","4 ML models evaluated on accuracy, AUC, F1, and 5-fold
+            cross-validation.","#9c27b0","/performance"),
+            ("fa-brain","Prediction","Real-time heart disease risk prediction using the best-performing ML
+            model.","#e53935","/predict"),
+            ("fa-book-open","Data Story","Narrative walkthrough of insights and actionable healthcare
+            recommendations.","#00bcd4","/story"),
+            ("fa-globe","Web Integration","Full-stack Flask + Bootstrap web app with REST API
+            endpoints.","#607d8b","/dashboard"),
+            ("fa-file-alt","Documentation","Complete project report, data dictionary, methodology, and
+            findings.","#795548","/"),
+            ] %}
+            {% for icon, title, desc, color, link in modules %}
+            <div class="col-md-6 col-lg-3">
+                <a href="{{link}}" style="text-decoration:none;">
+                    <div class="stat-card h-100" style="border-color:{{color}}33;">
+                        <div class="icon" style="background:{{color}}22;color:{{color}};"><i class="fas {{icon}}"></i>
+                        </div>
+                        <div style="font-weight:700; margin-bottom:.4rem;">{{title}}</div>
+                        <p style="font-size:.78rem;line-height:1.5; margin:0;">{{desc}}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

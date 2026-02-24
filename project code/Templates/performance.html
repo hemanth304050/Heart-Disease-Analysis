@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Performance Testing{% endblock %}
+{% block page_title %}Model Performance Testing{% endblock %}
+{% block content %}
+
+<p style="color:var(--muted);margin-bottom:1.5rem;">
+    4 machine learning models trained and evaluated using <strong style="color:var(--text);">80/20 train-test
+        split</strong>
+    and <strong style="color:var(--text);">5-fold stratified cross-validation</strong>.
+</p>
+
+<!-- Model Comparison Table -->
+<div class="card-panel mb-4">
+    <div class="card-header"><i class="fas fa-table me-2"></i>Model Comparison</div>
+    <div class="p-3" style="overflow-x:auto;">
+        <table class="table table-dark table-hover" style="font-size:.875rem;border-color:var(--border);">
+            <thead>
+                <tr style="color:var(--muted);border-color:var(--border);">
+                    <th>Model</th>
+                    <th>Accuracy</th>
+                    <th>AUC</th>
+                    <th>CV Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for model_name, m in metrics.items() %}
+                <tr style="border-color:var(--border);">
+                    <td style="font-weight:600;">{{ model_name }}</td>
+                    <td><span class="badge" style="background:rgba(26,115,232,.25);color:#58a6ff;">{{ m.accuracy
+                            }}%</span></td>
+                    <td><span class="badge" style="background:rgba(76,175,80,.25);color:#81c784;">{{ m.auc }}%</span>
+                    </td>
+                    <td><span class="badge" style="background:rgba(255,152,0,.25);color:#ffb74d;">{{ m.cv_acc }}%</span>
+                    </td>
+                    <td>{{ m.precision }}%</td>
+                    <td>{{ m.recall }}%</td>
+                    <td>{{ m.f1 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Performance Charts -->
+<div class="row g-3">
+    {% for fname in charts %}
+    {% set titles = {
+    '09_model_comparison.png': 'Accuracy & AUC Comparison',
+    '10_feature_importance.png': 'Feature Importance (Random Forest)',
+    '11_roc_curves.png': 'ROC Curves — All Models'
+    } %}
+    <div class="col-md-{% if loop.index == 1 %}7{% else %}5{% endif %}">
+        <div class="card-panel h-100">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>{{ titles.get(fname, fname) }}
+            </div>
+            <div class="p-2">
+                <img src="{{ url_for('static', filename='charts/' ~ fname) }}" alt="{{ fname }}"
+                    style="width:100%;border-radius:8px;" />
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Confusion Matrices -->
+<div class="card-panel mt-4">
+    <div class="card-header"><i class="fas fa-th me-2"></i>Confusion Matrices</div>
+    <div class="row g-0 p-3">
+        {% for model_name, m in metrics.items() %}
+        <div class="col-6 col-md-3 p-2 text-center">
+            <div style="font-weight:700;font-size:.82rem;margin-bottom:.5rem;color:var(--muted);">{{ model_name }}</div>
+            {% set cm = m.cm %}
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+                <tr>
+                    <td style="padding:.4rem;background:rgba(76,175,80,.2);border-radius:4px 0 0 0;">
+                        TN: {{ cm[0][0] }}
+                    </td>
+                    <td style="padding:.4rem;background:rgba(229,57,53,.15);border-radius:0 4px 0 0;">
+                        FP: {{ cm[0][1] }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:.4rem;background:rgba(255,152,0,.15);border-radius:0 0 0 4px;">
+                        FN: {{ cm[1][0] }}
+                    </td>
+                    <td style="padding:.4rem;background:rgba(76,175,80,.2);border-radius:0 0 4px 0;">
+                        TP: {{ cm[1][1] }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

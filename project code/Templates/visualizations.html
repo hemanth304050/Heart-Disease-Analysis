@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Visualizations{% endblock %}
+{% block page_title %}Data Visualizations{% endblock %}
+{% block content %}
+
+<p style="color:var(--muted); margin-bottom:1.5rem;">
+    8 matplotlib & seaborn charts generated from <strong style="color:var(--text);">1 000 patient records</strong>.
+    Click any chart to enlarge.
+</p>
+
+<div class="row g-3">
+    {% for fname, title in chart_data %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card-panel h-100">
+            <div class="card-header"><i class="fas fa-chart-line me-2"></i>{{ title }}</div>
+            <div class="p-2">
+                <img src="{{ url_for('static', filename='charts/' ~ fname) }}" alt="{{ title }}"
+                    style="width:100%;border-radius:8px;cursor:pointer;" onclick="openModal(this.src,'{{ title }}')" />
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Lightbox Modal -->
+<div id="chartModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);
+     z-index:9999;display:none;align-items:center;justify-content:center;padding:2rem;"
+    onclick="this.style.display='none'">
+    <div onclick="event.stopPropagation()" style="max-width:900px;width:100%;
+         background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.25rem;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong id="modalTitle" style="font-size:1rem;"></strong>
+            <button onclick="document.getElementById('chartModal').style.display='none'"
+                style="background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;">×</button>
+        </div>
+        <img id="modalImg" src="" alt="" style="width:100%;border-radius:8px;" />
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+    function openModal(src, title) {
+        document.getElementById('modalImg').src = src;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('chartModal').style.display = 'flex';
+    }
+</script>
+{% endblock %}

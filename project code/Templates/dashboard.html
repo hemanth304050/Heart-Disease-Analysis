@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-4">
+    {% set kpis = [
+    ("Total Patients", stats.total, "fa-users", "#58a6ff", "rgba(26,115,232,.15)"),
+    ("Disease Cases", stats.disease ~ " (" ~ stats.disease_pct ~ "%)", "fa-heartbeat", "#e57373",
+    "rgba(229,57,53,.15)"),
+    ("Healthy Patients", stats.no_disease, "fa-shield-alt", "#81c784", "rgba(76,175,80,.15)"),
+    ("Avg Age", stats.avg_age ~ " yrs", "fa-birthday-cake", "#ffb74d", "rgba(255,152,0,.15)"),
+    ] %}
+    {% for label, val, icon, color, bg in kpis %}
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background:{{bg}};color:{{color}};"><i class="fas {{icon}}"></i></div>
+            <h3 style="color:{{color}};">{{val}}</h3>
+            <p>{{label}}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-3">
+    <!-- Target Doughnut -->
+    <div class="col-md-4">
+        <div class="card-panel h-100">
+            <div class="card-header"><i class="fas fa-circle-half-stroke me-2"></i>Disease Split</div>
+            <div class="p-3 d-flex justify-content-center">
+                <canvas id="targetChart" style="max-height:240px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Age Group Bar -->
+    <div class="col-md-8">
+        <div class="card-panel h-100">
+            <div class="card-header"><i class="fas fa-chart-bar me-2"></i>Disease by Age Group</div>
+            <div class="p-3"><canvas id="ageGroupChart" style="max-height:240px;"></canvas></div>
+        </div>
+    </div>
+    <!-- Chest Pain -->
+    <div class="col-md-6">
+        <div class="card-panel">
+            <div class="card-header"><i class="fas fa-lungs me-2"></i>Chest Pain vs Disease Risk</div>
+            <div class="p-3"><canvas id="cpChart" style="max-height:220px;"></canvas></div>
+        </div>
+    </div>
+    <!-- Bio Metrics -->
+    <div class="col-md-6">
+        <div class="card-panel">
+            <div class="card-header"><i class="fas fa-stethoscope me-2"></i>Key Biomarkers (Averages)</div>
+            <div class="p-3">
+                {% set biomarkers = [
+                ("Cholesterol", stats.avg_chol, "mg/dl", 300, "#ffb74d"),
+                ("Blood Pressure", stats.avg_bp, "mmHg", 200, "#e57373"),
+                ("Max Heart Rate", stats.avg_hr, "bpm", 220, "#81c784"),
+                ] %}
+                {% for label, val, unit, max, color in biomarkers %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small style="font-weight:600;color:var(--muted);">{{label}}</small>
+                        <small style="color:{{color}};font-weight:700;">{{val}} {{unit}}</small>
+                    </div>
+                    <div class="progress" style="height:6px;background:#30363d;border-radius:4px;">
+                        <div class="progress-bar"
+                            style="width:{{(val/max*100)|round}}%;background:{{color}};border-radius:4px;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="mt-4">
+                    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem;">Data Quality</div>
+                    <div class="d-flex gap-3">
+                        <div style="text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:800;color:#81c784;">100%</div>
+                            <div style="font-size:.72rem;color:var(--muted);">Complete</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:800;color:#58a6ff;">13</div>
+                            <div style="font-size:.72rem;color:var(--muted);">Features</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:800;color:#ffb74d;">4</div>
+                            <div style="font-size:.72rem;color:var(--muted);">ML Models</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+    const GRID_COLOR = 'rgba(255,255,255,.06)';
+    const TICK_COLOR = '#8b949e';
+    const defaults = Chart.defaults;
+    defaults.color = TICK_COLOR;
+    defaults.borderColor = GRID_COLOR;
+
+    fetch('/api/chart-data').then(r => r.json()).then(data => {
+
+        // Doughnut
+        new Chart(document.getElementById('targetChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['No Disease', 'Disease'],
+                datasets: [{
+                    data: [data.target[0] || 0, data.target[1] || 0],
+                    backgroundColor: ['#1a73e8', '#e53935'], borderWidth: 0, hoverOffset: 6
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+        });
+
+        // Age Group grouped bar
+        const ag = data.age_groups;
+        new Chart(document.getElementById('ageGroupChart'), {
+            type: 'bar',
+            data: {
+                labels: ag.labels,
+                datasets: [
+                    { label: 'No Disease', data: ag.no_disease, backgroundColor: '#1a73e8', borderRadius: 4 },
+                    { label: 'Disease', data: ag.disease, backgroundColor: '#e53935', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true, plugins: { legend: { position: 'top' } },
+                scales: { x: { grid: { display: false } }, y: { grid: { color: GRID_COLOR } } }
+            }
+        });
+
+        // Chest pain risk bar
+        const cp = data.cp;
+        const cpLabels = ['Typical Angina', 'Atypical Angina', 'Non-Anginal', 'Asymptomatic'];
+        const cpVals = [0, 1, 2, 3].map(k => cp[k] !== undefined ? (cp[k] * 100).toFixed(1) : 0);
+        new Chart(document.getElementById('cpChart'), {
+            type: 'bar',
+            data: {
+                labels: cpLabels,
+                datasets: [{
+                    label: 'Disease Risk %', data: cpVals,
+                    backgroundColor: ['#e53935', '#ff9800', '#1a73e8', '#4caf50'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true, plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false } }, y: { max: 100, ticks: { callback: v => v + '%' }, grid: { color: GRID_COLOR } } }
+            }
+        });
+    });
+</script>
+{% endblock %}
